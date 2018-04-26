@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Shopify Gift Popup</title>
+    <link rel="stylesheet" href="shopify-gift-popup.css">
+  </head>
+  <body>
+    <h1>Shopify Gift Popup</h1>
+    <script src="shopify-gift-popup.js"></script>
+    <script>
+      shopifyGiftPopup({
+        open: true,
+        header: 'Select your gift!',
+        collections: [
+          {handle: 'alpargatas-man', title: 'MAN'},
+          {handle: 'alpargatas-woman', title: 'WOMAN'}
+        ],
+        tag: 'BLOCK'
+      });
+    </script>
+  </body>
+</html>
