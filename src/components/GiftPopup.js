@@ -1,6 +1,6 @@
 import cn from './GiftPopup.css';
 import {Component} from 'preact';
-import {fetchJSON} from '../utils';
+import {fetchJSON, resizeImage} from '../utils';
 import cx from 'classnames';
 
 class GiftPopup extends Component {
@@ -20,7 +20,7 @@ class GiftPopup extends Component {
     );
     Promise.all(promises).then(results => {
       const products = {};
-      collections.forEach(({title, handle}, i) => {
+      collections.forEach(({handle}, i) => {
         products[handle] = results[i].products.filter(p => p.tags.includes(tag));
       });
       this.setState({
@@ -41,12 +41,39 @@ class GiftPopup extends Component {
     }, 500);
   };
 
+  getVariants(product) {
+    if (!product) return;
+    const filter = this.props.variantFilter;
+    return product.variants.filter(v => Object.keys(filter).every(key => v[key] === filter[key]));
+  }
+
+  selectCollection(handle) {
+    this.setState({
+      selectedCollection: handle,
+      selectedProductIndex: null,
+      selectedVariantId: null
+    });
+  }
+
+  selectProduct(i) {
+    this.setState({
+      selectedProductIndex: i,
+      selectedVariantId: null
+    });
+  }
+
   componentDidMount() {
     this.fetchResources();
   }
 
-  render({header, collections}, {open, visible, products, selectedCollection}) {
+  render(
+    {header, collections},
+    {open, visible, products, selectedCollection, selectedProductIndex, selectedVariantId}
+  ) {
     if (!open) return null;
+    const productItems = products[selectedCollection];
+    const selectedProduct = productItems[selectedProductIndex];
+    const variants = this.getVariants(selectedProduct);
     return (
       <div className={cx(cn.container, {[cn.container__visible]: visible})}>
         <div className={cn.backdrop} />
@@ -58,31 +85,50 @@ class GiftPopup extends Component {
                 &times;
               </a>
             </div>
-            <div className={cn.modalBody}>
-              <div className={cn.collectionSelector}>
-                {collections.map(c => (
-                  <div
-                    onClick={() => this.setState({selectedCollection: c.handle})}
-                    className={cx(cn.collectionItem, {
-                      [cn.collectionItem__active]: c.handle === selectedCollection
-                    })}
-                    key={c.handle}>
-                    {c.title}
-                  </div>
-                ))}
-              </div>
-              <div className={cn.productsSelector}>
-                {products[selectedCollection].map(p => (
-                  <div className={cn.productItem}>
-                    <div className={cn.productImage}>
-                      <img src={p.images[0].src} alt={p.title} />
-                      <img src={p.images[1].src} alt={p.title} />
-                    </div>
-                    {p.title}
-                  </div>
-                ))}
-              </div>
+            <div className={cn.collectionSelector}>
+              {collections.map(c => (
+                <div
+                  onClick={() => this.selectCollection(c.handle)}
+                  className={cx(cn.collectionItem, {
+                    [cn.collectionItem__active]: c.handle === selectedCollection
+                  })}
+                  key={c.handle}>
+                  {c.title}
+                </div>
+              ))}
             </div>
+            <div className={cn.productSelector}>
+              {productItems.map((p, i) => (
+                <div
+                  onClick={() => this.selectProduct(i)}
+                  className={cx(cn.productItem, {
+                    [cn.productItem__active]: i === selectedProductIndex
+                  })}
+                  key={p.handle}>
+                  <div className={cn.productImage}>
+                    <img src={resizeImage(p.images[0].src)} alt={p.title} />
+                    <img src={resizeImage(p.images[1].src)} alt={p.title} />
+                  </div>
+                  <div className={cn.productTitle}>{p.title}</div>
+                </div>
+              ))}
+            </div>
+            {variants &&
+              variants.length > 0 && (
+                <div className={cn.variantSelector}>
+                  {selectedProduct.options[0].name}:
+                  {variants.map(v => (
+                    <div
+                      onClick={() => this.setState({selectedVariantId: v.id})}
+                      className={cx(cn.variantItem, {
+                        [cn.variantItem__active]: v.id === selectedVariantId
+                      })}
+                      key={v.id}>
+                      {v.option1}
+                    </div>
+                  ))}
+                </div>
+              )}
             <div className={cn.modalFooter}>Footer</div>
           </div>
         </div>
