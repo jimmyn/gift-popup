@@ -8,7 +8,8 @@ class GiftPopup extends Component {
     super(props);
     this.state = {
       open: false,
-      visible: false
+      visible: false,
+      selectedCollection: props.collections[0].handle
     };
   }
 
@@ -18,14 +19,13 @@ class GiftPopup extends Component {
       fetchJSON(`${storeUrl}/collections/${c.handle}/products.json`)
     );
     Promise.all(promises).then(results => {
-      const data = collections.map(({title, handle}, i) => ({
-        handle,
-        title,
-        products: results[i].products.filter(p => p.tags.includes(tag))
-      }));
+      const products = {};
+      collections.forEach(({title, handle}, i) => {
+        products[handle] = results[i].products.filter(p => p.tags.includes(tag));
+      });
       this.setState({
         open: true,
-        collections: data
+        products
       });
       setTimeout(() => {
         this.setState({visible: true});
@@ -45,7 +45,7 @@ class GiftPopup extends Component {
     this.fetchResources();
   }
 
-  render({header}, {open, visible, collections}) {
+  render({header, collections}, {open, visible, products, selectedCollection}) {
     if (!open) return null;
     return (
       <div className={cx(cn.container, {[cn.container__visible]: visible})}>
@@ -58,7 +58,31 @@ class GiftPopup extends Component {
                 &times;
               </a>
             </div>
-            <div className={cn.modalBody}>Body</div>
+            <div className={cn.modalBody}>
+              <div className={cn.collectionSelector}>
+                {collections.map(c => (
+                  <div
+                    onClick={() => this.setState({selectedCollection: c.handle})}
+                    className={cx(cn.collectionItem, {
+                      [cn.collectionItem__active]: c.handle === selectedCollection
+                    })}
+                    key={c.handle}>
+                    {c.title}
+                  </div>
+                ))}
+              </div>
+              <div className={cn.productsSelector}>
+                {products[selectedCollection].map(p => (
+                  <div className={cn.productItem}>
+                    <div className={cn.productImage}>
+                      <img src={p.images[0].src} alt={p.title} />
+                      <img src={p.images[1].src} alt={p.title} />
+                    </div>
+                    {p.title}
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className={cn.modalFooter}>Footer</div>
           </div>
         </div>
