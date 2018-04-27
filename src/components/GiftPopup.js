@@ -14,7 +14,7 @@ class GiftPopup extends Component {
   }
 
   fetchResources() {
-    const {collections, tag, openDelay, minCartTotal} = this.props;
+    const {collections, tag, openDelay, minCartTotal, onLoad} = this.props;
     const promises = collections.map(c => frontApi.get(`/collections/${c.handle}/products.json`));
     promises.push(frontApi.get('/cart.js'));
     Promise.all(promises).then(results => {
@@ -33,6 +33,7 @@ class GiftPopup extends Component {
       }, openDelay);
       setTimeout(() => {
         this.setState({visible: true});
+        onLoad(this.element);
       }, openDelay + 100);
     });
   }
@@ -68,15 +69,15 @@ class GiftPopup extends Component {
 
   handleSubmit = e => {
     e.preventDefault();
-    frontApi
-      .post('/cart/add.js', {
-        quantity: 1,
-        id: this.state.selectedVariantId,
-        properties: {gift: true}
-      })
-      .then(() => {
-        this.handleClose();
-      });
+    const data = {
+      quantity: 1,
+      id: this.state.selectedVariantId,
+      properties: {gift: true}
+    };
+    frontApi.post('/cart/add.js', data).then(() => {
+      this.handleClose();
+      this.props.onSubmit(data);
+    });
   };
 
   componentDidMount() {
@@ -84,7 +85,7 @@ class GiftPopup extends Component {
   }
 
   render(
-    {header, collections, buttonText, variantName, buttonClass},
+    {header, collections, buttonText, buttonClass},
     {open, visible, products, selectedCollection, selectedProductIndex, selectedVariantId}
   ) {
     if (!open) return null;
@@ -92,7 +93,9 @@ class GiftPopup extends Component {
     const selectedProduct = productItems[selectedProductIndex];
     const variants = this.getVariants(selectedProduct);
     return (
-      <div className={cx(cn.container, {[cn.container__visible]: visible})}>
+      <div
+        className={cx(cn.container, {[cn.container__visible]: visible})}
+        ref={el => (this.element = el)}>
         <div className={cn.backdrop} />
         <div className={cn.content}>
           <div className={cn.modal}>
@@ -133,7 +136,7 @@ class GiftPopup extends Component {
             {variants &&
               variants.length > 0 && (
                 <div className={cn.variantSelector}>
-                  {variantName}:
+                  {selectedProduct.options[0].name}:
                   {variants.map(v => (
                     <div
                       onClick={() => this.setState({selectedVariantId: v.id})}

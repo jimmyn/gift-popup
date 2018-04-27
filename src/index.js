@@ -6,7 +6,9 @@ const defaultConfig = {
   collections: [],
   header: 'Select your gift!',
   buttonText: 'Receive the gift',
-  openDelay: 0
+  openDelay: 0,
+  onLoad: () => {},
+  onSubmit: () => {}
 };
 
 module.exports = _config => {
