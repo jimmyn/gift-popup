@@ -24,7 +24,7 @@
   display: flex;
   z-index: 550;
   visibility: hidden;
-  transition: all ease-in-out 260ms;
+  transition: opacity ease-in-out 260ms;
   opacity: 0;
 }
 

@@ -14,10 +14,14 @@ class GiftPopup extends Component {
   }
 
   fetchResources() {
-    const {collections, tag, openDelay} = this.props;
+    const {collections, tag, openDelay, minCartTotal} = this.props;
     const promises = collections.map(c => frontApi.get(`/collections/${c.handle}/products.json`));
+    promises.push(frontApi.get('/cart.js'));
     Promise.all(promises).then(results => {
       const products = {};
+      const cart = results.pop();
+      if (cart.total_price / 100 < minCartTotal) return;
+      if (cart.items.some(item => item.properties && item.properties.gift)) return;
       collections.forEach(({handle}, i) => {
         products[handle] = results[i].products.filter(p => p.tags.includes(tag));
       });
@@ -67,7 +71,8 @@ class GiftPopup extends Component {
     frontApi
       .post('/cart/add.js', {
         quantity: 1,
-        id: this.state.selectedVariantId
+        id: this.state.selectedVariantId,
+        properties: {gift: true}
       })
       .then(() => {
         this.handleClose();
