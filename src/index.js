@@ -1,11 +1,12 @@
-import 'whatwg-fetch';
 import {render} from 'preact';
 import GiftPopup from 'components/GiftPopup';
 
 const defaultConfig = {
-  storeUrl: 'https://paez.com',
   open: true,
-  collections: []
+  collections: [],
+  header: 'Select your gift!',
+  buttonText: 'Receive the gift',
+  openDelay: 1000
 };
 
 module.exports = _config => {

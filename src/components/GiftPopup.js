@@ -1,6 +1,6 @@
 import cn from './GiftPopup.css';
 import {Component} from 'preact';
-import {fetchJSON, resizeImage} from '../utils';
+import {resizeImage, frontApi} from '../utils';
 import cx from 'classnames';
 
 class GiftPopup extends Component {
@@ -14,27 +14,27 @@ class GiftPopup extends Component {
   }
 
   fetchResources() {
-    const {collections, tag, storeUrl} = this.props;
-    const promises = collections.map(c =>
-      fetchJSON(`${storeUrl}/collections/${c.handle}/products.json`)
-    );
+    const {collections, tag, openDelay} = this.props;
+    const promises = collections.map(c => frontApi.get(`/collections/${c.handle}/products.json`));
     Promise.all(promises).then(results => {
       const products = {};
       collections.forEach(({handle}, i) => {
         products[handle] = results[i].products.filter(p => p.tags.includes(tag));
       });
-      this.setState({
-        open: true,
-        products
-      });
+      setTimeout(() => {
+        this.setState({
+          open: true,
+          products
+        });
+      }, openDelay);
       setTimeout(() => {
         this.setState({visible: true});
-      }, 100);
+      }, openDelay + 100);
     });
   }
 
   handleClose = e => {
-    e.preventDefault();
+    e && e.preventDefault();
     this.setState({visible: false});
     setTimeout(() => {
       this.setState({open: false});
@@ -62,12 +62,24 @@ class GiftPopup extends Component {
     });
   }
 
+  handleSubmit = e => {
+    e.preventDefault();
+    frontApi
+      .post('/cart/add.js', {
+        quantity: 1,
+        id: this.state.selectedVariantId
+      })
+      .then(() => {
+        this.handleClose();
+      });
+  };
+
   componentDidMount() {
     this.fetchResources();
   }
 
   render(
-    {header, collections},
+    {header, collections, buttonText, variantName, buttonClass},
     {open, visible, products, selectedCollection, selectedProductIndex, selectedVariantId}
   ) {
     if (!open) return null;
@@ -116,7 +128,7 @@ class GiftPopup extends Component {
             {variants &&
               variants.length > 0 && (
                 <div className={cn.variantSelector}>
-                  {selectedProduct.options[0].name}:
+                  {variantName}:
                   {variants.map(v => (
                     <div
                       onClick={() => this.setState({selectedVariantId: v.id})}
@@ -129,7 +141,14 @@ class GiftPopup extends Component {
                   ))}
                 </div>
               )}
-            <div className={cn.modalFooter}>Footer</div>
+            <div className={cn.modalFooter}>
+              <button
+                onClick={this.handleSubmit}
+                className={cx(cn.button, buttonClass)}
+                disabled={!selectedVariantId}>
+                {buttonText}
+              </button>
+            </div>
           </div>
         </div>
       </div>
