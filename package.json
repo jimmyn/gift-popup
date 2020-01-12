@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^8.0.2",
-    "eslint": "4.11.0",
+    "eslint": "4.18.2",
     "eslint-config-microapps-react": "^1.0.0",
     "eslint-config-prettier": "2.8.0",
     "eslint-friendly-formatter": "^3.0.0",
